@@ -20,7 +20,7 @@ func NewStorage(db *sqlx.DB) *Storage {
 }
 
 var schema = `
-CREATE TABLE IF NOT EXISTS MainUser (
+CREATE TABLE IF NOT EXISTS main_user (
     id UUID UNIQUE,
     username text,
     password text,
@@ -30,9 +30,11 @@ CREATE TABLE IF NOT EXISTS MainUser (
 
 CREATE TABLE IF NOT EXISTS orders (
     id UUID UNIQUE,
-    order_number int UNIQUE,
+    order_number bigint UNIQUE,
     order_user UUID,
-    uploaded_at date
+    uploaded_at date,
+    accrual int,
+    status text
 )
 `
 
@@ -44,7 +46,7 @@ func (strg *Storage) CreateUser(username, pass string, id *uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := strg.db.ExecContext(ctx, "INSERT INTO mainuser (id, username, password) VALUES ($1, $2, $3)", id, username, pass)
+	_, err := strg.db.ExecContext(ctx, "INSERT INTO main_user (id, username, password) VALUES ($1, $2, $3)", id, username, pass)
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
@@ -55,7 +57,7 @@ func (strg *Storage) VerifyUser(username string) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	ans := strg.db.QueryRowContext(ctx, "SELECT username FROM mainuser WHERE username=$1", username)
+	ans := strg.db.QueryRowContext(ctx, "SELECT username FROM main_user WHERE username=$1", username)
 	errScan := ans.Scan(&username)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
@@ -70,7 +72,7 @@ func (strg *Storage) TakeUserID(username string) (*uuid.UUID, bool) {
 
 	var id uuid.UUID
 
-	ans := strg.db.QueryRowContext(ctx, "SELECT id FROM mainuser WHERE username=$1", username)
+	ans := strg.db.QueryRowContext(ctx, "SELECT id FROM main_user WHERE username=$1", username)
 	errScan := ans.Scan(&id)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
@@ -88,7 +90,10 @@ func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := strg.db.ExecContext(ctx, "INSERT INTO orders (id, order_number, order_user, uploaded_at) VALUES ($1, $2, $3, $4)", id, orderNumber, &user, t)
+	_, err := strg.db.ExecContext(
+		ctx,
+		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual) VALUES ($1, $2, $3, $4, $5, $6)",
+		id, orderNumber, &user, t, "NEW", 0)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return err
@@ -117,11 +122,40 @@ func (strg *Storage) TakeUserBalance(userID *uuid.UUID) (*models.UserBalance, er
 
 	var userBalance models.UserBalance
 
-	ans := strg.db.QueryRowContext(ctx, "SELECT balance, withdrawn FROM mainuser WHERE id=$1", userID)
+	ans := strg.db.QueryRowContext(ctx, "SELECT balance, withdrawn FROM main_user WHERE id=$1", userID)
 	errScan := ans.Scan(&userBalance)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
 		return nil, errScan
 	}
 	return &userBalance, nil
+}
+
+func (strg *Storage) TakeUserOrders(userID *uuid.UUID) (*models.Orders, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := strg.db.QueryContext(ctx, "SELECT * FROM orders WHERE order_user=$1", userID)
+	if err != nil {
+		logger.Initialize().Info(err)
+		return nil, err
+	}
+
+	orders := make(models.Orders, 0)
+	for rows.Next() {
+		var order models.UserOrder
+		var id uuid.UUID
+		var orderUser uuid.UUID
+		if err = rows.Scan(&id, &order.Number, &orderUser, &order.UploadedAt, &order.Accrual, &order.Status); err != nil {
+			logger.Initialize().Info(err)
+			return nil, err
+		}
+		orders = append(orders, order)
+	}
+
+	if err = rows.Err(); err != nil {
+		logger.Initialize().Info(err)
+		return nil, err
+	}
+	return &orders, nil
 }
