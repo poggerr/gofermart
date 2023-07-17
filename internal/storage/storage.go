@@ -126,7 +126,7 @@ func (strg *Storage) TakeUserBalance(userID *uuid.UUID) (*models.UserBalance, er
 	var userBalance models.UserBalance
 
 	ans := strg.db.QueryRowContext(ctx, "SELECT balance, withdrawn FROM main_user WHERE id=$1", userID)
-	errScan := ans.Scan(&userBalance)
+	errScan := ans.Scan(&userBalance.Current, &userBalance.Withdrawn)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
 		return nil, errScan
