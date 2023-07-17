@@ -235,11 +235,6 @@ func (a *App) UserBalance(res http.ResponseWriter, req *http.Request) {
 	res.Write(marshal)
 }
 
-type Withdraw struct {
-	order int
-	sum   float32
-}
-
 func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 	c, err := req.Cookie("session_token")
 	if err != nil {
@@ -257,7 +252,7 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var withdraw Withdraw
+	var withdraw models.Withdraw
 
 	err = json.Unmarshal(body, &withdraw)
 	if err != nil {
@@ -266,7 +261,14 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, isStore := a.strg.TakeOrderByUser(withdraw.order)
+	order, err := strconv.Atoi(withdraw.OrderNumber)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	_, isStore := a.strg.TakeOrderByUser(order)
 	if !isStore {
 		res.WriteHeader(http.StatusUnprocessableEntity)
 		return
@@ -279,8 +281,22 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if balance.Current < withdraw.sum {
+	if balance.Current < withdraw.Sum {
 		res.WriteHeader(http.StatusPaymentRequired)
+		return
+	}
+
+	err = a.strg.Debit(userID, withdraw.Sum)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = a.strg.CreateWithdraw(userID, &withdraw)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -288,5 +304,30 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 }
 
 func (a *App) Withdrawals(res http.ResponseWriter, req *http.Request) {
+	c, err := req.Cookie("session_token")
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
+	userID := authorization.GetUserID(c.Value)
+
+	withdrawals, err := a.strg.TakeUserWithdrawals(userID)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	marshal, err := json.Marshal(withdrawals)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	res.Header().Set("content-type", "application/json ")
+	res.WriteHeader(http.StatusOK)
+	res.Write(marshal)
 }

@@ -35,6 +35,14 @@ CREATE TABLE IF NOT EXISTS orders (
     uploaded_at date,
     accrual int,
     status text
+);
+
+CREATE TABLE IF NOT EXISTS withdrawals (
+    id UUID UNIQUE,
+    order_number bigint UNIQUE,
+    order_user UUID,
+    sum float,
+    processed_at date
 )
 `
 
@@ -134,6 +142,46 @@ func (strg *Storage) TakeUserBalance(userID *uuid.UUID) (*models.UserBalance, er
 	return &userBalance, nil
 }
 
+func (strg *Storage) Debit(userID *uuid.UUID, sum float32) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var oldSum float32
+
+	ans := strg.db.QueryRowContext(ctx, "SELECT balance FROM main_user WHERE id=$1", userID)
+	errScan := ans.Scan(&oldSum)
+	if errScan != nil {
+		logger.Initialize().Info(errScan)
+		return errScan
+	}
+	oldSum -= sum
+	_, err := strg.db.ExecContext(ctx, "UPDATE main_user SET balance=$1 WHERE id=$2", oldSum, userID)
+	if err != nil {
+		logger.Initialize().Info(err)
+		return err
+	}
+	return nil
+}
+
+func (strg *Storage) CreateWithdraw(userID *uuid.UUID, withdraw *models.Withdraw) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	id := uuid.New()
+	t := time.Now()
+	t.Format(time.RFC3339)
+
+	_, err := strg.db.ExecContext(
+		ctx,
+		"INSERT INTO withdrawals (id, order_number, order_user, sum, processed_at) VALUES ($1, $2, $3, $4, $5)",
+		id, withdraw.OrderNumber, userID, withdraw.Sum, t)
+	if err != nil {
+		logger.Initialize().Info(err)
+		return err
+	}
+	return nil
+}
+
 func (strg *Storage) TakeUserOrders(userID *uuid.UUID) (*models.Orders, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -161,4 +209,33 @@ func (strg *Storage) TakeUserOrders(userID *uuid.UUID) (*models.Orders, error) {
 		return nil, err
 	}
 	return &orders, nil
+}
+
+func (strg *Storage) TakeUserWithdrawals(userID *uuid.UUID) (*models.Withdrawals, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := strg.db.QueryContext(ctx, "SELECT * FROM withdrawals WHERE order_user=$1", userID)
+	if err != nil {
+		logger.Initialize().Info(err)
+		return nil, err
+	}
+
+	withdrawals := make(models.Withdrawals, 0)
+	for rows.Next() {
+		var withdraw models.Withdraw
+		var id uuid.UUID
+		var orderUser uuid.UUID
+		if err = rows.Scan(&id, &withdraw.OrderNumber, &orderUser, &withdraw.Sum, &withdraw.ProcessedAt); err != nil {
+			logger.Initialize().Info(err)
+			return nil, err
+		}
+		withdrawals = append(withdrawals, withdraw)
+	}
+
+	if err = rows.Err(); err != nil {
+		logger.Initialize().Info(err)
+		return nil, err
+	}
+	return &withdrawals, nil
 }
