@@ -48,7 +48,7 @@ func (strg *Storage) CreateUser(username, pass string, id *uuid.UUID) error {
 
 	_, err := strg.db.ExecContext(
 		ctx,
-		"INSERT INTO main_user (id, username, password, withdrawn, balance) VALUES ($1, $2, $3)",
+		"INSERT INTO main_user (id, username, password, withdrawn, balance) VALUES ($1, $2, $3, $4, $5)",
 		id, username, pass, 0, 0)
 	if err != nil {
 		logger.Initialize().Info(err)
