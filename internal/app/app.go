@@ -261,14 +261,14 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	//order, err := strconv.Atoi(withdraw.OrderNumber)
-	//if err != nil {
-	//	a.sugaredLogger.Info(err)
-	//	res.WriteHeader(http.StatusBadRequest)
-	//	return
-	//}
+	order, err := strconv.Atoi(withdraw.OrderNumber)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	_, isStore := a.strg.TakeOrderByUser(withdraw.OrderNumber)
+	_, isStore := a.strg.TakeOrderByUser(order)
 	if !isStore {
 		res.WriteHeader(http.StatusUnprocessableEntity)
 		return
