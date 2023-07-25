@@ -50,12 +50,9 @@ func TakeAccrual(orderNumber string, url string) (float32, error) {
 
 	var ans Accrual
 
-	fmt.Println(string(body))
-
 	err = json.Unmarshal(body, &ans)
 	if err != nil {
-		logger.Initialize().Info(err)
-		return 0, err
+		fmt.Println(err)
 	}
 
 	fmt.Println(ans)
