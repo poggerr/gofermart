@@ -54,7 +54,8 @@ func TakeAccrual(orderNumber string, url string) (float32, error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	fmt.Println(response.Status)
+	fmt.Println(response.Body)
 	fmt.Println(ans)
 
 	return ans.Accrual, nil
