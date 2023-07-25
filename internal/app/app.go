@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/poggerr/gophermart/internal/authorization"
 	"github.com/poggerr/gophermart/internal/config"
 	"github.com/poggerr/gophermart/internal/logger"
@@ -154,6 +155,12 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	accrual, err := service.TakeAccrual(string(body), a.cfg.Accrual)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		return
+	}
+
 	user, isUsed := a.strg.TakeOrderByUser(order)
 	if isUsed {
 		switch user {
@@ -165,7 +172,7 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	err = a.strg.SaveOrder(order, userID)
+	err = a.strg.SaveOrder(order, userID, accrual)
 	if err != nil {
 		a.sugaredLogger.Info(err)
 		res.WriteHeader(http.StatusInternalServerError)
@@ -213,6 +220,7 @@ func (a *App) UserBalance(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+	fmt.Println(req.Context().Value("user"))
 
 	userID := authorization.GetUserID(c.Value)
 

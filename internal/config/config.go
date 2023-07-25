@@ -21,7 +21,7 @@ func NewConf() *Config {
 		"d",
 		"host=localhost user=gophermart password=userpassword dbname=gophermart sslmode=disable",
 		"write down db")
-	flag.StringVar(&cfg.Accrual, "r", "", "write down accrual server")
+	flag.StringVar(&cfg.Accrual, "r", "http://localhost:8080", "write down accrual server")
 	flag.Parse()
 
 	if err := env.Parse(&cfg); err != nil {

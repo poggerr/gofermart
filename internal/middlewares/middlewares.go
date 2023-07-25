@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"github.com/poggerr/gophermart/internal/logger"
 	"net/http"
 	"time"
@@ -14,7 +15,9 @@ func WithLogging(h http.Handler) http.Handler {
 			ResponseData:   responseData,
 		}
 
-		h.ServeHTTP(&lw, r)
+		ur := r.WithContext(context.WithValue(r.Context(), "user", "sdcsc"))
+
+		h.ServeHTTP(&lw, ur)
 
 		duration := time.Since(time.Now())
 
@@ -26,5 +29,6 @@ func WithLogging(h http.Handler) http.Handler {
 			"size", responseData.Size,
 		)
 	}
+
 	return http.HandlerFunc(logFn)
 }

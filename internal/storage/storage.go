@@ -92,7 +92,7 @@ func (strg *Storage) TakeUserID(username string) (*uuid.UUID, bool) {
 	return &id, false
 }
 
-func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID) error {
+func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID, accrual int) error {
 	t := time.Now()
 	t.Format(time.RFC3339)
 
@@ -104,7 +104,7 @@ func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID) error {
 	_, err := strg.db.ExecContext(
 		ctx,
 		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual) VALUES ($1, $2, $3, $4, $5, $6)",
-		id, orderNumber, &user, t, "NEW", 0)
+		id, orderNumber, &user, t, "NEW", accrual)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return err

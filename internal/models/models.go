@@ -17,7 +17,7 @@ type UserBalance struct {
 }
 
 type UserOrder struct {
-	Number     int       `db:"order_number" json:"number"`
+	Number     string    `db:"order_number" json:"number"`
 	Status     string    `db:"status" json:"status"`
 	Accrual    int       `db:"accrual" json:"accrual"`
 	UploadedAt time.Time `db:"uploaded_at" json:"uploaded_at"`
