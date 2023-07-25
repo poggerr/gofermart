@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/poggerr/gophermart/internal/logger"
 	"io"
 	"net/http"
 )
@@ -28,22 +29,22 @@ func checksum(number int) int {
 }
 
 type Accrual struct {
-	Order   string `json:"order"`
-	Status  string `json:"status"`
-	Accrual int    `json:"accrual"`
+	Order   string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float32 `json:"accrual"`
 }
 
-func TakeAccrual(orderNumber string, url string) (int, error) {
+func TakeAccrual(orderNumber string, url string) (float32, error) {
 	response, err := http.Get(url + "/api/orders/" + orderNumber)
 	if err != nil {
-		fmt.Println(err)
+		logger.Initialize().Info(err)
 		return 0, err
 	}
 
 	body, err := io.ReadAll(response.Body)
 	response.Body.Close()
 	if err != nil {
-		fmt.Println(err)
+		logger.Initialize().Info(err)
 		return 0, err
 	}
 
@@ -51,9 +52,11 @@ func TakeAccrual(orderNumber string, url string) (int, error) {
 
 	err = json.Unmarshal(body, &ans)
 	if err != nil {
-		fmt.Println(err)
+		logger.Initialize().Info(err)
 		return 0, err
 	}
+
+	fmt.Println(ans)
 
 	return ans.Accrual, nil
 }

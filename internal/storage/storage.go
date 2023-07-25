@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS orders (
     order_number bigint UNIQUE,
     order_user UUID,
     uploaded_at date,
-    accrual int,
+    accrual float,
     status text
 );
 
@@ -92,7 +92,7 @@ func (strg *Storage) TakeUserID(username string) (*uuid.UUID, bool) {
 	return &id, false
 }
 
-func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID, accrual int) error {
+func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID, accrual float32) error {
 	t := time.Now()
 	t.Format(time.RFC3339)
 
