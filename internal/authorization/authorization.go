@@ -1,6 +1,7 @@
 package authorization
 
 import (
+	"errors"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/poggerr/gophermart/internal/encrypt"
@@ -54,4 +55,17 @@ func RegisterUser(strg *storage.Storage, user *models.User) (uuid.UUID, error) {
 		return id, err
 	}
 	return id, nil
+}
+
+func AuthUser(strg *storage.Storage, user *models.User) error {
+	dbPass, err := strg.TakeUserPass(user)
+	if err != nil {
+		logger.Initialize().Info(err)
+		return err
+	}
+	decrypted := encrypt.Encrypt(user.Password)
+	if dbPass != decrypted {
+		return errors.New("ошибка авторизации")
+	}
+	return nil
 }

@@ -25,6 +25,8 @@ func main() {
 
 	strg := storage.NewStorage(db)
 
+	//go repo.WorkerDeleteURLs()
+
 	strg.RestoreDB()
 
 	newApp := app.NewApp(cfg, strg, sugaredLogger)

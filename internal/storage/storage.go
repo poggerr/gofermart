@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS orders (
     order_number bigint UNIQUE,
     order_user UUID,
     uploaded_at date,
-    accrual float,
+    accrual_service float,
     status text
 );
 
@@ -103,7 +103,7 @@ func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID, accrual float32
 
 	_, err := strg.db.ExecContext(
 		ctx,
-		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual) VALUES ($1, $2, $3, $4, $5, $6)",
+		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
 		id, orderNumber, &user, t, "NEW", accrual)
 	if err != nil {
 		logger.Initialize().Info(err)
@@ -238,4 +238,19 @@ func (strg *Storage) TakeUserWithdrawals(userID *uuid.UUID) (*models.Withdrawals
 		return nil, err
 	}
 	return &withdrawals, nil
+}
+
+func (strg *Storage) TakeUserPass(user *models.User) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var dbPass string
+
+	ans := strg.db.QueryRowContext(ctx, "SELECT password FROM main_user WHERE username=$1", user.Username)
+	errScan := ans.Scan(&dbPass)
+	if errScan != nil {
+		logger.Initialize().Info(errScan)
+		return "", errScan
+	}
+	return dbPass, nil
 }
