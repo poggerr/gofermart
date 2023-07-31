@@ -5,22 +5,17 @@ import (
 	"fmt"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/poggerr/gophermart/internal/logger"
+	"github.com/poggerr/gophermart/internal/models"
 	"net/http"
 	"time"
 )
 
-type Accrual struct {
-	Order   string  `json:"order"`
-	Status  string  `json:"status"`
-	Accrual float32 `json:"accrual_service"`
-}
-
-func AccrualFun(orderNumber string, url string) (float32, error) {
+func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 	client := &http.Client{}
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 20 * time.Second
+	b.MaxElapsedTime = 5 * time.Second
 
-	var ans Accrual
+	var ans models.Accrual
 
 	operation := func() error {
 		resp, err := client.Get(url + "/api/orders/" + orderNumber)
@@ -51,8 +46,8 @@ func AccrualFun(orderNumber string, url string) (float32, error) {
 	err := backoff.Retry(operation, b)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
-		return 0, err
+		return nil, err
 	}
 
-	return ans.Accrual, nil
+	return &ans, nil
 }
