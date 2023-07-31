@@ -21,7 +21,6 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	sugaredLogger := logger.Initialize()
 
 	strg := storage.NewStorage(db)
