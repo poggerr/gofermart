@@ -55,8 +55,8 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 
 	user, isUsed := a.strg.TakeOrderByUser(order)
 	if isUsed {
-		switch user {
-		case userID:
+		switch *user {
+		case *userID:
 			res.WriteHeader(http.StatusOK)
 			return
 		default:
