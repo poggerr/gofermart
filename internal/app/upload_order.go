@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/poggerr/gophermart/internal/authorization"
 	"github.com/poggerr/gophermart/internal/order_validation"
 	"io"
@@ -46,11 +47,14 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 			return
 		default:
 			res.WriteHeader(http.StatusConflict)
+			fmt.Println(user)
+			fmt.Println(userID)
+			fmt.Println("Ты пуся")
 			return
 		}
 	}
 
-	err = a.strg.SaveOrder(order, user)
+	err = a.strg.SaveOrder(order, userID)
 	if err != nil {
 		a.sugaredLogger.Info(err)
 		res.WriteHeader(http.StatusInternalServerError)

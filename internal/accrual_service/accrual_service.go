@@ -15,27 +15,6 @@ type Accrual struct {
 	Accrual float32 `json:"accrual_service"`
 }
 
-func TakeAccrual(orderNumber string, url string) (float32, error) {
-
-	response, err := http.Get(url + "/api/orders/" + orderNumber)
-	if err != nil {
-		logger.Initialize().Info(err)
-		return 0, err
-	}
-
-	var ans Accrual
-
-	dec := json.NewDecoder(response.Body)
-
-	err = dec.Decode(&ans)
-	if err != nil {
-		logger.Initialize().Info(err)
-		return 0, err
-	}
-
-	return ans.Accrual, nil
-}
-
 func AccrualFun(orderNumber string, url string) (float32, error) {
 	client := &http.Client{}
 	b := backoff.NewExponentialBackOff()
@@ -60,6 +39,10 @@ func AccrualFun(orderNumber string, url string) (float32, error) {
 				logger.Initialize().Info(err)
 			}
 			return nil
+		}
+
+		if resp.StatusCode == http.StatusNoContent {
+			return fmt.Errorf("Заказ не загружен в систему acrrual")
 		}
 
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
