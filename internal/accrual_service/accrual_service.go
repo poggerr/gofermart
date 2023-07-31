@@ -24,8 +24,6 @@ func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 		}
 		defer resp.Body.Close()
 
-		fmt.Println(resp.StatusCode)
-
 		if resp.StatusCode == http.StatusOK {
 			dec := json.NewDecoder(resp.Body)
 
