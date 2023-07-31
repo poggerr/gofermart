@@ -50,12 +50,13 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	err = a.repo.TakeAsync(string(body), user, a.cfg.Accrual)
+	err = a.strg.SaveOrder(order, user)
 	if err != nil {
 		a.sugaredLogger.Info(err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer a.repo.TakeAsync(string(body), user, a.cfg.Accrual)
 
 	res.WriteHeader(http.StatusAccepted)
 

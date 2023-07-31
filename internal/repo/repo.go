@@ -17,18 +17,17 @@ func NewRepo(strg *storage.Storage) *AccrualRepo {
 	}
 }
 
-func (r *AccrualRepo) TakeAsync(orderNum string, user *uuid.UUID, accrualURL string) error {
+func (r *AccrualRepo) TakeAsync(orderNum string, user *uuid.UUID, accrualURL string) {
 	r.takeAccrualChan <- storage.SaveOrd{
 		OrderNum:   orderNum,
 		User:       user,
 		AccrualURL: accrualURL,
 	}
-	return nil
 }
 
 func (r *AccrualRepo) WorkerTakeAccrual() {
 	for accrual := range r.takeAccrualChan {
-		r.repository.SaveOrder(accrual)
+		r.repository.UpdateOrder(accrual)
 	}
 
 }

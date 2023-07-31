@@ -256,10 +256,28 @@ type SaveOrd struct {
 	AccrualURL string
 }
 
-func (strg *Storage) SaveOrder(order SaveOrd) {
+func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID) error {
 	t := time.Now()
 	t.Format(time.RFC3339)
 	id := uuid.New()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := strg.db.ExecContext(
+		ctx,
+		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
+		id, orderNumber, &user, t, "NEW", 0)
+	if err != nil {
+		logger.Initialize().Info(err)
+		return err
+	}
+	return nil
+}
+
+func (strg *Storage) UpdateOrder(order SaveOrd) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
 	accrual, err := accrual_service.AccrualFun(order.OrderNum, order.AccrualURL)
 	if err != nil {
@@ -283,13 +301,9 @@ func (strg *Storage) SaveOrder(order SaveOrd) {
 		logger.Initialize().Info(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
 	_, err = strg.db.ExecContext(
 		ctx,
-		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
-		id, orderNumber, &order.User, t, "NEW", accrual)
+		"UPDATE orders SET accrual_service=$1 WHERE order_number=$2", accrual, orderNumber)
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
