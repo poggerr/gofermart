@@ -6,6 +6,7 @@ import (
 	"github.com/poggerr/gophermart/internal/app"
 	"github.com/poggerr/gophermart/internal/config"
 	"github.com/poggerr/gophermart/internal/logger"
+	"github.com/poggerr/gophermart/internal/repo"
 	"github.com/poggerr/gophermart/internal/routers"
 	"github.com/poggerr/gophermart/internal/server"
 	"github.com/poggerr/gophermart/internal/storage"
@@ -25,11 +26,12 @@ func main() {
 
 	strg := storage.NewStorage(db)
 
-	//go repo.WorkerDeleteURLs()
+	newRepo := repo.NewRepo(strg)
+	go newRepo.WorkerTakeAccrual()
 
 	strg.RestoreDB()
 
-	newApp := app.NewApp(cfg, strg, sugaredLogger)
+	newApp := app.NewApp(cfg, strg, sugaredLogger, newRepo)
 
 	r := routers.Router(newApp)
 	server.Server(cfg.ServAddr, r)

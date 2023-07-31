@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/poggerr/gophermart/internal/accrual_service"
 	"github.com/poggerr/gophermart/internal/logger"
 	"github.com/poggerr/gophermart/internal/models"
 	"time"
@@ -90,26 +91,6 @@ func (strg *Storage) TakeUserID(username string) (*uuid.UUID, bool) {
 		return nil, true
 	}
 	return &id, false
-}
-
-func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID, accrual float32) error {
-	t := time.Now()
-	t.Format(time.RFC3339)
-
-	id := uuid.New()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	_, err := strg.db.ExecContext(
-		ctx,
-		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
-		id, orderNumber, &user, t, "NEW", accrual)
-	if err != nil {
-		logger.Initialize().Info(err)
-		return err
-	}
-	return nil
 }
 
 func (strg *Storage) TakeOrderByUser(orderNumber int) (*uuid.UUID, bool) {
@@ -266,4 +247,44 @@ func (strg *Storage) UpdateUserBalance(userID *uuid.UUID, balance float32) error
 		return err
 	}
 	return nil
+}
+
+type SaveOrd struct {
+	OrderNum   int
+	User       *uuid.UUID
+	AccrualURL string
+}
+
+func (strg *Storage) SaveOrder(order SaveOrd) {
+	t := time.Now()
+	t.Format(time.RFC3339)
+	id := uuid.New()
+
+	accrual, err := accrual_service.AccrualFun(string(rune(order.OrderNum)), order.AccrualURL)
+	if err != nil {
+		logger.Initialize().Info(err)
+	}
+
+	balance, err := strg.TakeUserBalance(order.User)
+	if err != nil {
+		logger.Initialize().Info(err)
+	}
+
+	balance.Current += accrual
+
+	err = strg.UpdateUserBalance(order.User, balance.Current)
+	if err != nil {
+		logger.Initialize().Info(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err = strg.db.ExecContext(
+		ctx,
+		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
+		id, order.OrderNum, &order.User, t, "NEW", accrual)
+	if err != nil {
+		logger.Initialize().Info(err)
+	}
 }

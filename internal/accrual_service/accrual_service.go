@@ -39,7 +39,7 @@ func TakeAccrual(orderNumber string, url string) (float32, error) {
 func AccrualFun(orderNumber string, url string) (float32, error) {
 	client := &http.Client{}
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 2 * time.Millisecond
+	b.MaxElapsedTime = 20 * time.Second
 
 	var ans Accrual
 

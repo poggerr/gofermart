@@ -1,7 +1,6 @@
 package app
 
 import (
-	"github.com/poggerr/gophermart/internal/accrual_service"
 	"github.com/poggerr/gophermart/internal/authorization"
 	"github.com/poggerr/gophermart/internal/order_validation"
 	"io"
@@ -39,20 +38,6 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	accrual, err := accrual_service.AccrualFun(string(body), a.cfg.Accrual)
-	if err != nil {
-		a.sugaredLogger.Info(err)
-		//return
-	}
-
-	balance, err := a.strg.TakeUserBalance(userID)
-	if err != nil {
-		a.sugaredLogger.Info(err)
-		return
-	}
-
-	balance.Current += accrual
-
 	user, isUsed := a.strg.TakeOrderByUser(order)
 	if isUsed {
 		switch *user {
@@ -64,7 +49,8 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	err = a.strg.SaveOrder(order, userID, accrual)
+
+	err = a.repo.TakeAsync(order, user, a.cfg.Accrual)
 	if err != nil {
 		a.sugaredLogger.Info(err)
 		res.WriteHeader(http.StatusInternalServerError)
