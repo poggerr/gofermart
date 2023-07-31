@@ -39,7 +39,7 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	accrual, err := accrual_service.TakeAccrual(string(body), a.cfg.Accrual)
+	accrual, err := accrual_service.AccrualFun(string(body), a.cfg.Accrual)
 	if err != nil {
 		a.sugaredLogger.Info(err)
 		//return

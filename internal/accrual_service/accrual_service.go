@@ -2,6 +2,8 @@ package accrual_service
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/poggerr/gophermart/internal/logger"
 	"net/http"
 	"time"
@@ -13,11 +15,12 @@ type Accrual struct {
 	Accrual float32 `json:"accrual_service"`
 }
 
-func TakeAccrual(orderNumber string, url string) error {
+func TakeAccrual(orderNumber string, url string) (float32, error) {
 
 	response, err := http.Get(url + "/api/orders/" + orderNumber)
 	if err != nil {
 		logger.Initialize().Info(err)
+		return 0, err
 	}
 
 	var ans Accrual
@@ -27,31 +30,45 @@ func TakeAccrual(orderNumber string, url string) error {
 	err = dec.Decode(&ans)
 	if err != nil {
 		logger.Initialize().Info(err)
+		return 0, err
 	}
 
-	return nil
+	return ans.Accrual, nil
 }
 
-func AccrualFun(orderNumber string, url string) error {
-	//operation := TakeAccrual(orderNumber, url)
+func AccrualFun(orderNumber string, url string) (float32, error) {
+	client := &http.Client{}
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 10 * time.Second
 
-	//operation := func() error {
-	//
-	//}
-	//err := backoff.Retry(operation, backoff.NewExponentialBackOff())
-	//if err != nil {
-	//	// Handle error.
-	//	return
-	//}
+	var ans Accrual
 
-	for {
-		err := TakeAccrual(orderNumber, url)
+	operation := func() error {
+		resp, err := client.Get(url + "/api/orders/" + orderNumber)
 		if err != nil {
-			logger.Initialize().Info(err)
-			time.Sleep(1 * time.Millisecond)
+			return err
 		}
-		break
+		defer resp.Body.Close()
 
+		if resp.StatusCode == http.StatusOK {
+			dec := json.NewDecoder(resp.Body)
+
+			err = dec.Decode(&ans)
+			if err != nil {
+				logger.Initialize().Info(err)
+			}
+			return nil // Возвращаем nil, чтобы ретраи прекратились
+		}
+
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-	return nil
+
+	// Выполняем ретраи с использованием ретраера
+	err := backoff.Retry(operation, b)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		return 0, err
+	}
+
+	return ans.Accrual, nil
 }
