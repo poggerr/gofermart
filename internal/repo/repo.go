@@ -17,7 +17,7 @@ func NewRepo(strg *storage.Storage) *AccrualRepo {
 	}
 }
 
-func (r *AccrualRepo) TakeAsync(orderNum int, user *uuid.UUID, accrualURL string) error {
+func (r *AccrualRepo) TakeAsync(orderNum string, user *uuid.UUID, accrualURL string) error {
 	r.takeAccrualChan <- storage.SaveOrd{
 		OrderNum:   orderNum,
 		User:       user,

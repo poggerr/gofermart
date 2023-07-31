@@ -7,6 +7,7 @@ import (
 	"github.com/poggerr/gophermart/internal/accrual_service"
 	"github.com/poggerr/gophermart/internal/logger"
 	"github.com/poggerr/gophermart/internal/models"
+	"strconv"
 	"time"
 )
 
@@ -250,7 +251,7 @@ func (strg *Storage) UpdateUserBalance(userID *uuid.UUID, balance float32) error
 }
 
 type SaveOrd struct {
-	OrderNum   int
+	OrderNum   string
 	User       *uuid.UUID
 	AccrualURL string
 }
@@ -260,7 +261,7 @@ func (strg *Storage) SaveOrder(order SaveOrd) {
 	t.Format(time.RFC3339)
 	id := uuid.New()
 
-	accrual, err := accrual_service.AccrualFun(string(rune(order.OrderNum)), order.AccrualURL)
+	accrual, err := accrual_service.AccrualFun(order.OrderNum, order.AccrualURL)
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
@@ -269,10 +270,15 @@ func (strg *Storage) SaveOrder(order SaveOrd) {
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
+	if balance != nil {
+		balance.Current += accrual
+		err = strg.UpdateUserBalance(order.User, balance.Current)
+		if err != nil {
+			logger.Initialize().Info(err)
+		}
+	}
 
-	balance.Current += accrual
-
-	err = strg.UpdateUserBalance(order.User, balance.Current)
+	orderNumber, err := strconv.Atoi(order.OrderNum)
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
@@ -283,7 +289,7 @@ func (strg *Storage) SaveOrder(order SaveOrd) {
 	_, err = strg.db.ExecContext(
 		ctx,
 		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
-		id, order.OrderNum, &order.User, t, "NEW", accrual)
+		id, orderNumber, &order.User, t, "NEW", accrual)
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
