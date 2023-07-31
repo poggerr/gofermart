@@ -24,13 +24,14 @@ func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode == http.StatusOK {
-			dec := json.NewDecoder(resp.Body)
+		dec := json.NewDecoder(resp.Body)
 
-			err = dec.Decode(&ans)
-			if err != nil {
-				logger.Initialize().Info(err)
-			}
+		err = dec.Decode(&ans)
+		if err != nil {
+			logger.Initialize().Info(err)
+		}
+
+		if resp.StatusCode == http.StatusOK {
 			return nil
 		}
 
