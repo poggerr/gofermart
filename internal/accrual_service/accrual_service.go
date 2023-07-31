@@ -31,19 +31,9 @@ func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 			logger.Initialize().Info(err)
 		}
 
-		fmt.Println(ans)
-
 		if ans.Status == "PROCESSED" || ans.Status == "INVALID" {
 			return nil
 		}
-
-		//if resp.StatusCode == http.StatusOK {
-		//	return nil
-		//}
-
-		//if resp.StatusCode == http.StatusNoContent {
-		//	return fmt.Errorf("Заказ не загружен в систему acrrual")
-		//}
 
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
