@@ -47,5 +47,7 @@ func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 		return nil, err
 	}
 
+	fmt.Println(ans)
+
 	return &ans, nil
 }
