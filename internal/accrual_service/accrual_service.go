@@ -13,7 +13,7 @@ import (
 func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 	client := &http.Client{}
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 19 * time.Second
+	b.MaxElapsedTime = 10 * time.Second
 
 	var ans models.Accrual
 
@@ -34,9 +34,9 @@ func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 			return nil
 		}
 
-		if resp.StatusCode == http.StatusNoContent {
-			return fmt.Errorf("Заказ не загружен в систему acrrual")
-		}
+		//if resp.StatusCode == http.StatusNoContent {
+		//	return fmt.Errorf("Заказ не загружен в систему acrrual")
+		//}
 
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
