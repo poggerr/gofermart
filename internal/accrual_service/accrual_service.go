@@ -13,7 +13,7 @@ import (
 func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 	client := &http.Client{}
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 10 * time.Second
+	b.MaxElapsedTime = 19 * time.Second
 
 	var ans models.Accrual
 
