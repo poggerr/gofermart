@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/poggerr/gophermart/internal/logger"
 	"net/http"
+	"time"
 )
 
 type Accrual struct {
@@ -12,12 +13,11 @@ type Accrual struct {
 	Accrual float32 `json:"accrual_service"`
 }
 
-func TakeAccrual(orderNumber string, url string) (float32, error) {
+func TakeAccrual(orderNumber string, url string) error {
 
 	response, err := http.Get(url + "/api/orders/" + orderNumber)
 	if err != nil {
 		logger.Initialize().Info(err)
-		return 0, err
 	}
 
 	var ans Accrual
@@ -27,8 +27,31 @@ func TakeAccrual(orderNumber string, url string) (float32, error) {
 	err = dec.Decode(&ans)
 	if err != nil {
 		logger.Initialize().Info(err)
-		return 0, err
 	}
 
-	return ans.Accrual, nil
+	return nil
+}
+
+func AccrualFun(orderNumber string, url string) error {
+	//operation := TakeAccrual(orderNumber, url)
+
+	//operation := func() error {
+	//
+	//}
+	//err := backoff.Retry(operation, backoff.NewExponentialBackOff())
+	//if err != nil {
+	//	// Handle error.
+	//	return
+	//}
+
+	for {
+		err := TakeAccrual(orderNumber, url)
+		if err != nil {
+			logger.Initialize().Info(err)
+			time.Sleep(1 * time.Millisecond)
+		}
+		break
+
+	}
+	return nil
 }

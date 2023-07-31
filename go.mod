@@ -3,8 +3,8 @@ module github.com/poggerr/gophermart
 go 1.20
 
 require (
-	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/caarlos0/env/v8 v8.0.0
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.3.0
