@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/poggerr/gophermart/internal/authorization"
 	"net/http"
 )
@@ -14,7 +13,7 @@ func (a *App) UserBalance(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	fmt.Println(req.Context().Value("user"))
+	//fmt.Println(req.Context().Value("user"))
 
 	userID := authorization.GetUserID(c.Value)
 

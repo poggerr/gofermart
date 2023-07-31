@@ -39,7 +39,7 @@ func TakeAccrual(orderNumber string, url string) (float32, error) {
 func AccrualFun(orderNumber string, url string) (float32, error) {
 	client := &http.Client{}
 	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 10 * time.Second
+	b.MaxElapsedTime = 2 * time.Millisecond
 
 	var ans Accrual
 
@@ -57,13 +57,12 @@ func AccrualFun(orderNumber string, url string) (float32, error) {
 			if err != nil {
 				logger.Initialize().Info(err)
 			}
-			return nil // Возвращаем nil, чтобы ретраи прекратились
+			return nil
 		}
 
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	// Выполняем ретраи с использованием ретраера
 	err := backoff.Retry(operation, b)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
