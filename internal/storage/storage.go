@@ -254,3 +254,16 @@ func (strg *Storage) TakeUserPass(user *models.User) (string, error) {
 	}
 	return dbPass, nil
 }
+
+func (strg *Storage) UpdateUserBalance(userID *uuid.UUID, balance float32) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := strg.db.ExecContext(
+		ctx,
+		"UPDATE main_user SET balance=$1 WHERE id=$2", balance, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -45,6 +45,14 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		//return
 	}
 
+	balance, err := a.strg.TakeUserBalance(userID)
+	if err != nil {
+		a.sugaredLogger.Info(err)
+		return
+	}
+
+	balance.Current += accrual
+
 	user, isUsed := a.strg.TakeOrderByUser(order)
 	if isUsed {
 		switch user {
