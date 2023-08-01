@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/poggerr/gophermart/internal/accrual_service"
 	"github.com/poggerr/gophermart/internal/logger"
@@ -95,14 +94,10 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 	}
 
 	balance.Current += accrual.Accrual
-
-	fmt.Println(balance.Current)
 	err = strg.UpdateUserBalance(order.User, balance.Current)
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
-
-	fmt.Println(balance)
 
 	orderNumber, err := strconv.Atoi(order.OrderNum)
 	if err != nil {
