@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS main_user (
     username text,
     password text,
     balance float,
-    withdrawn int
+    withdrawn float
 );
 
 CREATE TABLE IF NOT EXISTS orders (

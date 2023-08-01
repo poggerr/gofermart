@@ -27,16 +27,18 @@ func (strg *Storage) Debit(userID *uuid.UUID, sum float32) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	var oldSum float32
+	var balance models.UserBalance
 
-	ans := strg.db.QueryRowContext(ctx, "SELECT balance FROM main_user WHERE id=$1", userID)
-	errScan := ans.Scan(&oldSum)
+	ans := strg.db.QueryRowContext(ctx, "SELECT balance, withdrawn FROM main_user WHERE id=$1", userID)
+	errScan := ans.Scan(&balance.Current, &balance.Withdrawn)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
 		return errScan
 	}
-	oldSum -= sum
-	_, err := strg.db.ExecContext(ctx, "UPDATE main_user SET balance=$1 WHERE id=$2", oldSum, userID)
+	balance.Current -= sum
+	balance.Withdrawn += sum
+
+	_, err := strg.db.ExecContext(ctx, "UPDATE main_user SET balance=$1, withdrawn=$2 WHERE id=$3", balance.Current, balance.Withdrawn, userID)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return err
