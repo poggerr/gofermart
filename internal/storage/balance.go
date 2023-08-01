@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/poggerr/gophermart/internal/logger"
 	"github.com/poggerr/gophermart/internal/models"
@@ -15,12 +14,7 @@ func (strg *Storage) TakeUserBalance(userID *uuid.UUID) (*models.UserBalance, er
 
 	var userBalance models.UserBalance
 
-	fmt.Println("hi else")
-	fmt.Println(userID)
-	fmt.Println("hello else")
-	fmt.Println(&userID)
-
-	ans := strg.db.QueryRowContext(ctx, "SELECT balance, withdrawn FROM main_user WHERE id=$1", &userID)
+	ans := strg.db.QueryRowContext(ctx, "SELECT balance, withdrawn FROM main_user WHERE id=$1", userID)
 	errScan := ans.Scan(&userBalance.Current, &userBalance.Withdrawn)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
@@ -35,14 +29,14 @@ func (strg *Storage) Debit(userID *uuid.UUID, sum float32) error {
 
 	var oldSum float32
 
-	ans := strg.db.QueryRowContext(ctx, "SELECT balance FROM main_user WHERE id=$1", &userID)
+	ans := strg.db.QueryRowContext(ctx, "SELECT balance FROM main_user WHERE id=$1", userID)
 	errScan := ans.Scan(&oldSum)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
 		return errScan
 	}
 	oldSum -= sum
-	_, err := strg.db.ExecContext(ctx, "UPDATE main_user SET balance=$1 WHERE id=$2", oldSum, &userID)
+	_, err := strg.db.ExecContext(ctx, "UPDATE main_user SET balance=$1 WHERE id=$2", oldSum, userID)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return err
@@ -56,7 +50,7 @@ func (strg *Storage) UpdateUserBalance(userID *uuid.UUID, balance float32) error
 
 	_, err := strg.db.ExecContext(
 		ctx,
-		"UPDATE main_user SET balance=$1 WHERE id=$2", balance, &userID)
+		"UPDATE main_user SET balance=$1 WHERE id=$2", balance, userID)
 	if err != nil {
 		return err
 	}

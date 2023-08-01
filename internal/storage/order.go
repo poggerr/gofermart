@@ -72,7 +72,7 @@ func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID) error {
 	_, err := strg.db.ExecContext(
 		ctx,
 		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
-		id, orderNumber, &user, t, "NEW", 0)
+		id, orderNumber, user, t, "NEW", 0)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return err
