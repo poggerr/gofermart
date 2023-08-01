@@ -89,6 +89,9 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 		logger.Initialize().Info(err)
 	}
 
+	fmt.Println(order.User)
+	fmt.Println("hello")
+
 	balance, err := strg.TakeUserBalance(order.User)
 	if err != nil {
 		logger.Initialize().Info(err)
