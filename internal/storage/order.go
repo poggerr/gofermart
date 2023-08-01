@@ -93,16 +93,15 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
-	fmt.Println(balance)
 	if balance != nil {
 		balance.Current += accrual.Accrual
 		err = strg.UpdateUserBalance(order.User, balance.Current)
 		if err != nil {
 			logger.Initialize().Info(err)
 		}
-	}
 
-	fmt.Println(balance.Current)
+		fmt.Println(balance)
+	}
 
 	orderNumber, err := strconv.Atoi(order.OrderNum)
 	if err != nil {
