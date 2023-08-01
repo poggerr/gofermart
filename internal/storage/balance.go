@@ -15,7 +15,9 @@ func (strg *Storage) TakeUserBalance(userID *uuid.UUID) (*models.UserBalance, er
 
 	var userBalance models.UserBalance
 
+	fmt.Println("hi else")
 	fmt.Println(userID)
+	fmt.Println("hello else")
 	fmt.Println(&userID)
 
 	ans := strg.db.QueryRowContext(ctx, "SELECT balance, withdrawn FROM main_user WHERE id=$1", &userID)

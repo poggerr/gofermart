@@ -52,7 +52,7 @@ func (a *App) RegisterUser(res http.ResponseWriter, req *http.Request) {
 		Value:   jwtString,
 		Path:    "/",
 		Domain:  "localhost",
-		Expires: time.Now().Add(120 * time.Second),
+		Expires: time.Now().Add(20 * time.Minute),
 	}
 
 	http.SetCookie(res, cook)
