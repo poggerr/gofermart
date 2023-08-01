@@ -1,4 +1,4 @@
-package accrualService
+package accrualservice
 
 import (
 	"encoding/json"

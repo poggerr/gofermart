@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/poggerr/gophermart/internal/accrualService"
+	"github.com/poggerr/gophermart/internal/accrualservice"
 	"github.com/poggerr/gophermart/internal/logger"
 	"github.com/poggerr/gophermart/internal/models"
 	"strconv"
@@ -83,7 +83,7 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	accrual, err := accrualService.AccrualFun(order.OrderNum, order.AccrualURL)
+	accrual, err := accrualservice.AccrualFun(order.OrderNum, order.AccrualURL)
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
