@@ -43,7 +43,7 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 	}
 
 	_, isStore := a.strg.TakeOrderByUser(order)
-	if !isStore {
+	if isStore {
 		res.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}

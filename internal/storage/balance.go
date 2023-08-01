@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/poggerr/gophermart/internal/logger"
 	"github.com/poggerr/gophermart/internal/models"
@@ -48,8 +47,6 @@ func (strg *Storage) Debit(userID *uuid.UUID, sum float32) error {
 func (strg *Storage) UpdateUserBalance(userID *uuid.UUID, balance float32) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-
-	fmt.Println(balance)
 
 	_, err := strg.db.ExecContext(
 		ctx,
