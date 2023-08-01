@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/poggerr/gophermart/internal/logger"
 	"github.com/poggerr/gophermart/internal/models"
@@ -20,6 +21,8 @@ func (strg *Storage) TakeUserBalance(userID *uuid.UUID) (*models.UserBalance, er
 		logger.Initialize().Info(errScan)
 		return nil, errScan
 	}
+
+	fmt.Println(userBalance)
 	return &userBalance, nil
 }
 
