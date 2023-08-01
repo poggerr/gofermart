@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/poggerr/gophermart/internal/accrual_service"
 	"github.com/poggerr/gophermart/internal/logger"
@@ -44,6 +45,8 @@ func (strg *Storage) TakeUserOrders(userID *uuid.UUID) (*models.Orders, error) {
 			logger.Initialize().Info(err)
 			return nil, err
 		}
+
+		fmt.Println(order.Accrual)
 		orders = append(orders, order)
 	}
 
