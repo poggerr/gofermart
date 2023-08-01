@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/poggerr/gophermart/internal/authorization"
-	"github.com/poggerr/gophermart/internal/order_validation"
+	"github.com/poggerr/gophermart/internal/orderValidation"
 	"io"
 	"net/http"
 	"strconv"
@@ -32,7 +32,7 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	isValid := order_validation.OrderValidation(order)
+	isValid := orderValidation.OrderValidation(order)
 	if !isValid {
 		res.WriteHeader(http.StatusUnprocessableEntity)
 		return

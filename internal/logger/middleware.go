@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"context"
 	"net/http"
 	"time"
 )
@@ -14,9 +13,9 @@ func WithLogging(h http.Handler) http.Handler {
 			ResponseData:   responseData,
 		}
 
-		ur := r.WithContext(context.WithValue(r.Context(), "user", "sdcsc"))
+		//ur := r.WithContext(context.WithValue(r.Context(), "user", "sdcsc"))
 
-		h.ServeHTTP(&lw, ur)
+		h.ServeHTTP(&lw, r)
 
 		duration := time.Since(time.Now())
 

@@ -1,4 +1,4 @@
-package order_validation
+package orderValidation
 
 func OrderValidation(number int) bool {
 	return (number%10+checksum(number/10))%10 == 0
