@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"github.com/poggerr/gophermart/internal/authorization"
 	"github.com/poggerr/gophermart/internal/order_validation"
 	"io"
@@ -58,8 +57,7 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println(user)
-	a.repo.TakeAsync(string(body), user, a.cfg.Accrual)
+	a.repo.TakeAsync(string(body), userID, a.cfg.Accrual)
 
 	res.WriteHeader(http.StatusAccepted)
 
