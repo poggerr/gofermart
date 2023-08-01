@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/poggerr/gophermart/internal/authorization"
 	"net/http"
 )
@@ -22,6 +23,8 @@ func (a *App) ListUserOrders(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusNoContent)
 		return
 	}
+
+	fmt.Println(orders)
 
 	marshal, err := json.Marshal(orders)
 	if err != nil {
