@@ -88,7 +88,7 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 	if err != nil {
 		logger.Initialize().Info(err)
 	}
-
+	fmt.Println("hi")
 	fmt.Println(order.User)
 	fmt.Println("hello")
 
