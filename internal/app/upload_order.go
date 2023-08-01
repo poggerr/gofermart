@@ -59,7 +59,7 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Println(user)
-	defer a.repo.TakeAsync(string(body), user, a.cfg.Accrual)
+	a.repo.TakeAsync(string(body), user, a.cfg.Accrual)
 
 	res.WriteHeader(http.StatusAccepted)
 
