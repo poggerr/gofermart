@@ -29,11 +29,12 @@ func (a *App) UserLogin(res http.ResponseWriter, req *http.Request) {
 
 	newUser, err := a.strg.GetUser(user.Username)
 	if err != nil {
+		a.sugaredLogger.Info(err)
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	err = authorization.CheckPass(a.strg, &user)
+	err = authorization.CheckPass(&user, newUser)
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
 		return

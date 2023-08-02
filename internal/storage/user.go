@@ -28,7 +28,7 @@ func (strg *Storage) GetUser(username string) (*models.User, error) {
 	var user models.User
 
 	ans := strg.Db.QueryRowContext(ctx, "SELECT * FROM main_user WHERE username=$1", username)
-	errScan := ans.Scan(&user)
+	errScan := ans.Scan(&user.ID, &user.Username, &user.Password, &user.Balance, &user.Withdraw)
 	if errScan != nil {
 		return nil, errScan
 	}

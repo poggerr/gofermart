@@ -57,12 +57,7 @@ func RegisterUser(strg *storage.Storage, user *models.User) (uuid.UUID, error) {
 	return id, nil
 }
 
-func CheckPass(strg *storage.Storage, user *models.User) error {
-	dbUser, err := strg.GetUser(user.Username)
-	if err != nil {
-		logger.Initialize().Info(err)
-		return err
-	}
+func CheckPass(user *models.User, dbUser *models.User) error {
 	decrypted := encrypt.Encrypt(user.Password)
 	if dbUser.Password != decrypted {
 		return errors.New("ошибка авторизации")
