@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type UserOrder struct {
 	Number     string    `db:"order_number" json:"number"`

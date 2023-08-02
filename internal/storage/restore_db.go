@@ -28,5 +28,5 @@ CREATE TABLE IF NOT EXISTS withdrawals (
 `
 
 func (strg *Storage) RestoreDB() {
-	strg.db.MustExec(schema)
+	strg.Db.MustExec(schema)
 }

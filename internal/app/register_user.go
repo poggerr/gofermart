@@ -27,8 +27,8 @@ func (a *App) RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	isVerify := a.strg.VerifyUser(user.Username)
-	if !isVerify {
+	_, err = a.strg.GetUser(user.Username)
+	if err != nil {
 		res.WriteHeader(http.StatusConflict)
 		return
 	}

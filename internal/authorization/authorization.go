@@ -57,14 +57,14 @@ func RegisterUser(strg *storage.Storage, user *models.User) (uuid.UUID, error) {
 	return id, nil
 }
 
-func AuthUser(strg *storage.Storage, user *models.User) error {
-	dbPass, err := strg.TakeUserPass(user)
+func CheckPass(strg *storage.Storage, user *models.User) error {
+	dbUser, err := strg.GetUser(user.Username)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return err
 	}
 	decrypted := encrypt.Encrypt(user.Password)
-	if dbPass != decrypted {
+	if dbUser.Password != decrypted {
 		return errors.New("ошибка авторизации")
 	}
 	return nil

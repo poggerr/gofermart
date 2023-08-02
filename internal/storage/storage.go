@@ -5,11 +5,11 @@ import (
 )
 
 type Storage struct {
-	db *sqlx.DB
+	Db *sqlx.DB
 }
 
 func NewStorage(db *sqlx.DB) *Storage {
 	return &Storage{
-		db: db,
+		Db: db,
 	}
 }

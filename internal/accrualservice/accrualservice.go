@@ -7,10 +7,11 @@ import (
 	"github.com/poggerr/gophermart/internal/logger"
 	"github.com/poggerr/gophermart/internal/models"
 	"net/http"
+	"strconv"
 	"time"
 )
 
-func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
+func Accrual(orderNumber string, url string) (*models.Accrual, error) {
 	client := &http.Client{}
 	b := backoff.NewExponentialBackOff()
 	b.MaxElapsedTime = 10 * time.Second
@@ -35,7 +36,7 @@ func AccrualFun(orderNumber string, url string) (*models.Accrual, error) {
 			return nil
 		}
 
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return fmt.Errorf(strconv.Itoa(resp.StatusCode))
 	}
 
 	err := backoff.Retry(operation, b)

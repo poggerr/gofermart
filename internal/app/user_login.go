@@ -27,19 +27,19 @@ func (a *App) UserLogin(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	userID, isVerify := a.strg.TakeUserID(user.Username)
-	if isVerify {
-		res.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	err = authorization.AuthUser(a.strg, &user)
+	newUser, err := a.strg.GetUser(user.Username)
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	jwtString, err := authorization.BuildJWTString(userID)
+	err = authorization.CheckPass(a.strg, &user)
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	jwtString, err := authorization.BuildJWTString(&newUser.ID)
 	if err != nil {
 		logger.Initialize().Info(err)
 		res.WriteHeader(http.StatusInternalServerError)

@@ -1,4 +1,4 @@
-package repo
+package async
 
 import (
 	"github.com/google/uuid"
@@ -17,7 +17,7 @@ func NewRepo(strg *storage.Storage) *AccrualRepo {
 	}
 }
 
-func (r *AccrualRepo) TakeAsync(orderNum string, user *uuid.UUID, accrualURL string) {
+func (r *AccrualRepo) SendToChan(orderNum string, user *uuid.UUID, accrualURL string) {
 	r.takeAccrualChan <- storage.SaveOrd{
 		OrderNum:   orderNum,
 		User:       user,
@@ -25,7 +25,7 @@ func (r *AccrualRepo) TakeAsync(orderNum string, user *uuid.UUID, accrualURL str
 	}
 }
 
-func (r *AccrualRepo) WorkerTakeAccrual() {
+func (r *AccrualRepo) WorkerAccrual() {
 	for accrual := range r.takeAccrualChan {
 		r.repository.UpdateOrder(accrual)
 	}

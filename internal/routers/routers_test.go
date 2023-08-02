@@ -31,7 +31,7 @@ package routers
 //
 //var cfg = NewDefConf()
 //var strg = storage.NewStorage("/tmp/short-url-db.json", connectDB())
-//var repo = service.NewDeleter(strg)
+//var async = service.NewDeleter(strg)
 //
 //func connectDB() *sql.DB {
 //	db, err := sql.Open("pgx", cfg.DB)
@@ -75,9 +75,9 @@ package routers
 //}
 //
 //func TestHandlersPost(t *testing.T) {
-//	go repo.WorkerDeleteURLs()
+//	go async.WorkerDeleteURLs()
 //	logger.Initialize()
-//	ts := httptest.NewServer(Router(&cfg, strg, strg.DB, repo))
+//	ts := httptest.NewServer(Router(&cfg, strg, strg.DB, async))
 //	defer ts.Close()
 //
 //	var testTable = []struct {
@@ -117,9 +117,9 @@ package routers
 //}
 //
 //func TestGzipCompression(t *testing.T) {
-//	go repo.WorkerDeleteURLs()
+//	go async.WorkerDeleteURLs()
 //	logger.Initialize()
-//	ts := httptest.NewServer(Router(&cfg, strg, strg.DB, repo))
+//	ts := httptest.NewServer(Router(&cfg, strg, strg.DB, async))
 //	defer ts.Close()
 //
 //	fmt.Println("/")

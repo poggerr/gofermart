@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/poggerr/gophermart/internal/authorization"
 	"github.com/poggerr/gophermart/internal/models"
 	"io"
@@ -9,26 +10,39 @@ import (
 	"strconv"
 )
 
-func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
-	c, err := req.Cookie("session_token")
+func (a *App) checkBalance(withdraw *models.Withdraw, userID *uuid.UUID) error {
+	balance, err := a.strg.TakeUserBalance(userID)
 	if err != nil {
 		a.sugaredLogger.Info(err)
-		res.WriteHeader(http.StatusUnauthorized)
-		return
+		return err
 	}
 
-	userID := authorization.GetUserID(c.Value)
+	if balance.Current < withdraw.Sum {
+		return err
+	}
+	return nil
+}
 
+func buildWithdraw(req *http.Request) (*models.Withdraw, error) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		a.sugaredLogger.Info(err)
-		res.WriteHeader(http.StatusBadRequest)
-		return
+		return nil, err
 	}
 
 	var withdraw models.Withdraw
 
 	err = json.Unmarshal(body, &withdraw)
+	if err != nil {
+		return nil, err
+	}
+
+	return &withdraw, err
+}
+
+func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
+	userID := authorization.FromContext(req.Context())
+
+	withdraw, err := buildWithdraw(req)
 	if err != nil {
 		a.sugaredLogger.Info(err)
 		res.WriteHeader(http.StatusBadRequest)
@@ -48,14 +62,8 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	balance, err := a.strg.TakeUserBalance(userID)
+	err = a.checkBalance(withdraw, userID)
 	if err != nil {
-		a.sugaredLogger.Info(err)
-		res.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if balance.Current < withdraw.Sum {
 		res.WriteHeader(http.StatusPaymentRequired)
 		return
 	}
@@ -67,7 +75,7 @@ func (a *App) Withdraw(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = a.strg.CreateWithdraw(userID, &withdraw)
+	err = a.strg.CreateWithdraw(userID, withdraw)
 	if err != nil {
 		a.sugaredLogger.Info(err)
 		res.WriteHeader(http.StatusInternalServerError)

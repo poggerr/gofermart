@@ -9,14 +9,7 @@ import (
 )
 
 func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
-	c, err := req.Cookie("session_token")
-	if err != nil {
-		a.sugaredLogger.Info(err)
-		res.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	userID := authorization.GetUserID(c.Value)
+	userID := authorization.FromContext(req.Context())
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -57,7 +50,7 @@ func (a *App) UploadOrder(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	a.repo.TakeAsync(string(body), userID, a.cfg.Accrual)
+	a.repo.SendToChan(string(body), userID, a.cfg.Accrual)
 
 	res.WriteHeader(http.StatusAccepted)
 

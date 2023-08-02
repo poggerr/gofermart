@@ -7,15 +7,7 @@ import (
 )
 
 func (a *App) UserBalance(res http.ResponseWriter, req *http.Request) {
-	c, err := req.Cookie("session_token")
-	if err != nil {
-		a.sugaredLogger.Info(err)
-		res.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	//fmt.Println(req.Context().Value("user"))
-
-	userID := authorization.GetUserID(c.Value)
+	userID := authorization.FromContext(req.Context())
 
 	balance, err := a.strg.TakeUserBalance(userID)
 	if err != nil {

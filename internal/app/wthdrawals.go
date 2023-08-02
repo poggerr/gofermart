@@ -7,14 +7,7 @@ import (
 )
 
 func (a *App) Withdrawals(res http.ResponseWriter, req *http.Request) {
-	c, err := req.Cookie("session_token")
-	if err != nil {
-		a.sugaredLogger.Info(err)
-		res.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	userID := authorization.GetUserID(c.Value)
+	userID := authorization.FromContext(req.Context())
 
 	withdrawals, err := a.strg.TakeUserWithdrawals(userID)
 	if err != nil {
