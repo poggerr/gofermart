@@ -83,7 +83,7 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	accrual, err := accrualservice.Accrual(order.OrderNum, order.AccrualURL)
+	accrual, err := accrualservice.Accrual(order.OrderNum, order.AccrualURL, strg.cfg.Client, strg.cfg.Backoff)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return

@@ -23,7 +23,7 @@ func main() {
 	}
 	sugaredLogger := logger.Initialize()
 
-	strg := storage.NewStorage(db)
+	strg := storage.NewStorage(db, cfg)
 
 	newRepo := async.NewRepo(strg)
 	go newRepo.WorkerAccrual()

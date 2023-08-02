@@ -8,13 +8,9 @@ import (
 	"github.com/poggerr/gophermart/internal/models"
 	"net/http"
 	"strconv"
-	"time"
 )
 
-func Accrual(orderNumber string, url string) (*models.Accrual, error) {
-	client := &http.Client{}
-	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 10 * time.Second
+func Accrual(orderNumber string, url string, client *http.Client, b *backoff.ExponentialBackOff) (*models.Accrual, error) {
 
 	var ans models.Accrual
 
