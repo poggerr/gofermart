@@ -86,6 +86,7 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 	accrual, err := accrualservice.Accrual(order.OrderNum, order.AccrualURL)
 	if err != nil {
 		logger.Initialize().Info(err)
+		return
 	}
 
 	balance, err := strg.TakeUserBalance(order.User)

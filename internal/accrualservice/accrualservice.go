@@ -30,6 +30,7 @@ func Accrual(orderNumber string, url string) (*models.Accrual, error) {
 		err = dec.Decode(&ans)
 		if err != nil {
 			logger.Initialize().Info(err)
+			return err
 		}
 
 		if ans.Status == "PROCESSED" || ans.Status == "INVALID" {
@@ -44,8 +45,5 @@ func Accrual(orderNumber string, url string) (*models.Accrual, error) {
 		fmt.Printf("error: %v\n", err)
 		return nil, err
 	}
-
-	fmt.Println(ans)
-
 	return &ans, nil
 }

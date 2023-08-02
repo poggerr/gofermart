@@ -27,8 +27,8 @@ func (a *App) RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, err = a.strg.GetUser(user.Username)
-	if err != nil {
+	dbUser, _ := a.strg.GetUser(user.Username)
+	if dbUser != nil {
 		res.WriteHeader(http.StatusConflict)
 		return
 	}
