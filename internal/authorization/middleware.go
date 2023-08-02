@@ -27,11 +27,15 @@ func AuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+type userID string
+
+const ReqUserKey = userID("userKey")
+
 func NewContext(ctx context.Context, user *uuid.UUID) context.Context {
-	return context.WithValue(ctx, "userKey", user)
+	return context.WithValue(ctx, ReqUserKey, user)
 }
 
 func FromContext(ctx context.Context) *uuid.UUID {
-	u := ctx.Value("userKey").(*uuid.UUID)
+	u := ctx.Value(ReqUserKey).(*uuid.UUID)
 	return u
 }

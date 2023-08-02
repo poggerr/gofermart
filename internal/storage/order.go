@@ -16,7 +16,7 @@ func (strg *Storage) TakeOrderByUser(orderNumber int) (*uuid.UUID, bool) {
 
 	var user uuid.UUID
 
-	ans := strg.Db.QueryRowContext(ctx, "SELECT order_user FROM orders WHERE order_number=$1", orderNumber)
+	ans := strg.DB.QueryRowContext(ctx, "SELECT order_user FROM orders WHERE order_number=$1", orderNumber)
 	errScan := ans.Scan(&user)
 	if errScan != nil {
 		logger.Initialize().Info(errScan)
@@ -29,7 +29,7 @@ func (strg *Storage) TakeUserOrders(userID *uuid.UUID) (*models.Orders, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := strg.Db.QueryContext(ctx, "SELECT * FROM orders WHERE order_user=$1", userID)
+	rows, err := strg.DB.QueryContext(ctx, "SELECT * FROM orders WHERE order_user=$1", userID)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return nil, err
@@ -68,7 +68,7 @@ func (strg *Storage) SaveOrder(orderNumber int, user *uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := strg.Db.ExecContext(
+	_, err := strg.DB.ExecContext(
 		ctx,
 		"INSERT INTO orders (id, order_number, order_user, uploaded_at, status, accrual_service) VALUES ($1, $2, $3, $4, $5, $6)",
 		id, orderNumber, user, t, "NEW", 0)
@@ -105,7 +105,7 @@ func (strg *Storage) UpdateOrder(order SaveOrd) {
 		logger.Initialize().Info(err)
 	}
 
-	_, err = strg.Db.ExecContext(
+	_, err = strg.DB.ExecContext(
 		ctx,
 		"UPDATE orders SET accrual_service=$1, status=$2 WHERE order_number=$3", accrual.Accrual, accrual.Status, orderNumber)
 	if err != nil {

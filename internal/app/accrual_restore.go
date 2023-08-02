@@ -12,7 +12,7 @@ func (a *App) AccrualRestore() {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := a.strg.Db.QueryContext(ctx, "SELECT * FROM orders WHERE status=$1 OR status=$2 OR status=$3", "NEW", "REGISTERED", "PROCESSING")
+	rows, err := a.strg.DB.QueryContext(ctx, "SELECT * FROM orders WHERE status=$1 OR status=$2 OR status=$3", "NEW", "REGISTERED", "PROCESSING")
 	if err != nil {
 		logger.Initialize().Info(err)
 		return

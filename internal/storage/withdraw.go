@@ -16,7 +16,7 @@ func (strg *Storage) CreateWithdraw(userID *uuid.UUID, withdraw *models.Withdraw
 	t := time.Now()
 	t.Format(time.RFC3339)
 
-	_, err := strg.Db.ExecContext(
+	_, err := strg.DB.ExecContext(
 		ctx,
 		"INSERT INTO withdrawals (id, order_number, order_user, sum, processed_at) VALUES ($1, $2, $3, $4, $5)",
 		id, withdraw.OrderNumber, userID, withdraw.Sum, t)
@@ -31,7 +31,7 @@ func (strg *Storage) TakeUserWithdrawals(userID *uuid.UUID) (*models.Withdrawals
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := strg.Db.QueryContext(ctx, "SELECT * FROM withdrawals WHERE order_user=$1", userID)
+	rows, err := strg.DB.QueryContext(ctx, "SELECT * FROM withdrawals WHERE order_user=$1", userID)
 	if err != nil {
 		logger.Initialize().Info(err)
 		return nil, err

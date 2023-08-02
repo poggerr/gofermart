@@ -11,7 +11,7 @@ func (strg *Storage) CreateUser(username, pass string, id *uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	_, err := strg.Db.ExecContext(
+	_, err := strg.DB.ExecContext(
 		ctx,
 		"INSERT INTO main_user (id, username, password, withdrawn, balance) VALUES ($1, $2, $3, $4, $5)",
 		id, username, pass, 0, 0)
@@ -27,7 +27,7 @@ func (strg *Storage) GetUser(username string) (*models.User, error) {
 
 	var user models.User
 
-	ans := strg.Db.QueryRowContext(ctx, "SELECT * FROM main_user WHERE username=$1", username)
+	ans := strg.DB.QueryRowContext(ctx, "SELECT * FROM main_user WHERE username=$1", username)
 	errScan := ans.Scan(&user.ID, &user.Username, &user.Password, &user.Balance, &user.Withdraw)
 	if errScan != nil {
 		return nil, errScan

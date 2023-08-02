@@ -6,13 +6,13 @@ import (
 )
 
 type Storage struct {
-	Db  *sqlx.DB
+	DB  *sqlx.DB
 	cfg *config.Config
 }
 
 func NewStorage(db *sqlx.DB, cfg *config.Config) *Storage {
 	return &Storage{
-		Db:  db,
+		DB:  db,
 		cfg: cfg,
 	}
 }
