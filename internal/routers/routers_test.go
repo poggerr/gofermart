@@ -1,153 +1,160 @@
 package routers
 
-//import (
-//	"bytes"
-//	"compress/gzip"
-//	"database/sql"
-//	"encoding/json"
-//	"fmt"
-//	_ "github.com/jackc/pgx/v5/stdlib"
-//	"github.com/poggerr/gophermart/internal/config"
-//	"github.com/poggerr/gophermart/internal/logger"
-//	"github.com/poggerr/gophermart/internal/storage"
-//	"github.com/stretchr/testify/assert"
-//	"github.com/stretchr/testify/require"
-//	"io"
-//	"net/http"
-//	"net/http/httptest"
-//	"testing"
-//)
-//
-//var mainMap = make(map[string]string)
-//
-//func NewDefConf() config.Config {
-//	return config.Config{
-//		Serv:   ":8080",
-//		DefURL: "http://localhost:8080",
-//		Path:   "/tmp/short-url-db3.json",
-//		DB:     "host=localhost user=username password=userpassword dbname=shortener sslmode=disable",
-//	}
-//}
-//
-//var cfg = NewDefConf()
-//var strg = storage.NewStorage("/tmp/short-url-db.json", connectDB())
-//var async = service.NewDeleter(strg)
-//
-//func connectDB() *sql.DB {
-//	db, err := sql.Open("pgx", cfg.DB)
-//	if err != nil {
-//		logger.Initialize().Error("Ошибка при подключении к БД ", err)
-//	}
-//	defer db.Close()
-//	return db
-//}
-//
-//func testRequestPost(t *testing.T, ts *httptest.Server, method,
-//	path string, oldURL string) (*http.Response, string) {
-//
-//	req, err := http.NewRequest(method, ts.URL+path, bytes.NewBuffer([]byte(oldURL)))
-//	require.NoError(t, err)
-//
-//	resp, err := ts.Client().Do(req)
-//	require.NoError(t, err)
-//
-//	respBody, err := io.ReadAll(resp.Body)
-//	require.NoError(t, err)
-//
-//	return resp, string(respBody)
-//}
-//
-//func testRequestJSON(t *testing.T, ts *httptest.Server, method, path string, longURL string) (*http.Response, string) {
-//	longURLMap := make(map[string]string)
-//	longURLMap["url"] = longURL
-//	marshal, _ := json.Marshal(longURLMap)
-//
-//	req, err := http.NewRequest(method, ts.URL+path, bytes.NewBuffer(marshal))
-//	require.NoError(t, err)
-//
-//	resp, err := ts.Client().Do(req)
-//	require.NoError(t, err)
-//
-//	respBody, err := io.ReadAll(resp.Body)
-//	require.NoError(t, err)
-//
-//	return resp, string(respBody)
-//}
-//
-//func TestHandlersPost(t *testing.T) {
-//	go async.WorkerDeleteURLs()
-//	logger.Initialize()
-//	ts := httptest.NewServer(Router(&cfg, strg, strg.DB, async))
-//	defer ts.Close()
-//
-//	var testTable = []struct {
-//		api         string
-//		method      string
-//		url         string
-//		contentType string
-//		status      int
-//		location    string
-//	}{
-//		{api: "/", method: "POST", url: "https://prabicum.yandex.ru/", contentType: "text/plain; charset=utf-8", status: 409},
-//		{api: "/", method: "POST", url: "https://www.gjle.com/", contentType: "text/plain; charset=utf-8", status: 409},
-//	}
-//
-//	for _, v := range testTable {
-//		switch v.api {
-//		case "/":
-//			resp, _ := testRequestPost(t, ts, v.method, v.api, v.url)
-//			defer resp.Body.Close()
-//			assert.Equal(t, v.status, resp.StatusCode)
-//			assert.Equal(t, v.contentType, resp.Header.Get("Content-Type"))
-//		case "/id":
-//			newURL := "/"
-//			resp, _ := testRequestPost(t, ts, http.MethodGet, newURL, "")
-//			defer resp.Body.Close()
-//			assert.Equal(t, v.status, resp.StatusCode)
-//			assert.Equal(t, v.contentType, resp.Header.Get("Location"))
-//		case "/api/shorten":
-//			resp, _ := testRequestJSON(t, ts, v.method, v.api, v.url)
-//			defer resp.Body.Close()
-//			assert.Equal(t, v.status, resp.StatusCode)
-//			assert.Equal(t, v.contentType, resp.Header.Get("Content-Type"))
-//		}
-//
-//	}
+import (
+	"bytes"
+	"encoding/json"
+	"github.com/cenkalti/backoff/v4"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/poggerr/gophermart/internal/app"
+	"github.com/poggerr/gophermart/internal/async"
+	"github.com/poggerr/gophermart/internal/config"
+	"github.com/poggerr/gophermart/internal/logger"
+	"github.com/poggerr/gophermart/internal/storage"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+)
+
+func NewDefConf() *config.Config {
+	conf := config.Config{
+		ServAddr: ":8081",
+		DB:       "host=localhost user=gophermart password=userpassword dbname=gophermart sslmode=disable",
+		Accrual:  ":8080",
+		Client:   nil,
+		Backoff:  nil,
+	}
+	conf.Client = &http.Client{}
+	conf.Backoff = backoff.NewExponentialBackOff()
+	conf.Backoff.MaxElapsedTime = 10 * time.Second
+	return &conf
+}
+
+var sugaredLogger = logger.Initialize()
+var cfg = NewDefConf()
+var strg = storage.NewStorage(connectDB(), cfg)
+var newRepo = async.NewRepo(strg)
+var newApp = app.NewApp(cfg, strg, sugaredLogger, newRepo)
+
+func connectDB() *sqlx.DB {
+	db, err := sqlx.Connect("postgres", cfg.DB)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return db
+}
+
+//func AddedDataToDB()  {
+//	strg.RestoreDB()
 //
 //}
-//
-//func TestGzipCompression(t *testing.T) {
-//	go async.WorkerDeleteURLs()
-//	logger.Initialize()
-//	ts := httptest.NewServer(Router(&cfg, strg, strg.DB, async))
-//	defer ts.Close()
-//
-//	fmt.Println("/")
-//
-//	requestBody := `{
-//        "url": "https://yan.ru/"
-//    }`
-//
-//	t.Run("sends_gzip", func(t *testing.T) {
-//
-//		buf := bytes.NewBuffer(nil)
-//		zb := gzip.NewWriter(buf)
-//		_, err := zb.Write([]byte(requestBody))
-//		require.NoError(t, err)
-//		err = zb.Close()
-//		require.NoError(t, err)
-//
-//		r := httptest.NewRequest("POST", ts.URL+"/api/shorten", buf)
-//		r.RequestURI = ""
-//		r.Header.Set("Content-Encoding", "gzip")
-//
-//		resp, err := http.DefaultClient.Do(r)
-//		require.NoError(t, err)
-//
-//		defer resp.Body.Close()
-//
-//		_, err = io.ReadAll(resp.Body)
-//		require.NoError(t, err)
-//
-//	})
-//}
+
+func testRequestPost(t *testing.T, ts *httptest.Server, method,
+	path string, data string) (*http.Response, string) {
+
+	req, err := http.NewRequest(method, ts.URL+path, bytes.NewBuffer([]byte(data)))
+	require.NoError(t, err)
+
+	//req.AddCookie(cookie)
+
+	resp, err := ts.Client().Do(req)
+	require.NoError(t, err)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	return resp, string(respBody)
+}
+
+func testRequestJSON(t *testing.T, ts *httptest.Server, method, path string, data []byte) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, bytes.NewBuffer(data))
+	require.NoError(t, err)
+
+	resp, err := ts.Client().Do(req)
+	require.NoError(t, err)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	return resp, string(respBody)
+}
+
+type UserReg struct {
+	Username string `json:"login"`
+	Password string `json:"password"`
+}
+
+func TestHandlersPost(t *testing.T) {
+	go newRepo.WorkerAccrual()
+	ts := httptest.NewServer(Router(newApp))
+	defer ts.Close()
+
+	var testTable = []struct {
+		name        string
+		api         string
+		method      string
+		url         string
+		contentType string
+		status      int
+		location    string
+	}{
+		{name: "reg", api: "/api/user/register", method: "POST", status: 200},
+		{name: "reg", api: "/api/user/register", method: "POST", status: 409},
+		{name: "log", api: "/api/user/login", method: "POST", status: 200},
+		{name: "log_negative", api: "/api/user/login", method: "POST", status: 401},
+		{name: "make_order_without_auth", api: "/api/user/orders", method: "POST", status: 401},
+	}
+
+	for _, v := range testTable {
+		switch {
+		case v.name == "reg":
+			user := UserReg{
+				Username: "poggerr15",
+				Password: "qwerty123",
+			}
+			marshal, err := json.Marshal(user)
+			if err != nil {
+				sugaredLogger.Info(err)
+			}
+			resp, _ := testRequestJSON(t, ts, v.method, v.api, marshal)
+			defer resp.Body.Close()
+			assert.Equal(t, v.status, resp.StatusCode)
+		case v.name == "log":
+			user := UserReg{
+				Username: "poggerr15",
+				Password: "qwerty123",
+			}
+			marshal, err := json.Marshal(user)
+			if err != nil {
+				sugaredLogger.Info(err)
+			}
+			resp, _ := testRequestJSON(t, ts, v.method, v.api, marshal)
+			defer resp.Body.Close()
+			assert.Equal(t, v.status, resp.StatusCode)
+		case v.name == "log_negative":
+			user := UserReg{
+				Username: "poggerr1555",
+				Password: "qwerty1237777",
+			}
+			marshal, err := json.Marshal(user)
+			if err != nil {
+				sugaredLogger.Info(err)
+			}
+			resp, _ := testRequestJSON(t, ts, v.method, v.api, marshal)
+			defer resp.Body.Close()
+			assert.Equal(t, v.status, resp.StatusCode)
+		case v.name == "make_order_without_auth":
+			num := "4736745983266662"
+			resp, _ := testRequestPost(t, ts, v.method, v.api, num)
+			defer resp.Body.Close()
+			assert.Equal(t, v.status, resp.StatusCode)
+		}
+
+	}
+
+}
